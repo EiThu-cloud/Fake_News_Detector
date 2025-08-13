@@ -64,9 +64,9 @@ if st.button("🔍 Check News"):
 
             # Only two outputs
             if prediction:
-                st.error("✅ Real News")
+                st.success("✅ Real News")
             else:
-                st.success("🚨 Fake News") 
+                st.error("🚨 Fake News") 
     else:
         st.warning("⚠️ Please enter some text before checking.")
 
