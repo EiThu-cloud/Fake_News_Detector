@@ -23,9 +23,10 @@ if st.button("🔍 Check News"):
         try:
             # Send request to backend API
             response = requests.post(
-                "http://127.0.0.1:5000/predict",  # Change to your backend endpoint
+                "https://your-backend-url.com/predict",  # <-- Your actual backend URL here
                 json={"text": news_text}
             )
+
 
             if response.status_code == 200:
                 result = response.json().get("prediction", "Unknown")
