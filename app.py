@@ -1,4 +1,5 @@
 import streamlit as st
+<<<<<<< HEAD
 import pickle
 
 # =========================
@@ -10,10 +11,19 @@ def load_model_and_vectorizer():
         model = pickle.load(f)
     with open("tfidf_vectorizer.pkl", "rb") as f:
         vectorizer = pickle.load(f)
+=======
+import joblib
+
+@st.cache_resource
+def load_model_and_vectorizer():
+    model = joblib.load("model.pkl")
+    vectorizer = joblib.load("vectorizer.pkl")
+>>>>>>> beecc0f (Updated Streamlit app with joblib model loading)
     return model, vectorizer
 
 model, vectorizer = load_model_and_vectorizer()
 
+<<<<<<< HEAD
 # =========================
 # Streamlit UI
 # =========================
@@ -44,3 +54,22 @@ if st.button("🔍 Check News"):
 # Footer
 st.markdown("---")
 st.caption("Built with ❤️ using Streamlit and scikit-learn")
+=======
+st.title("📰 Fake News Detector")
+st.write("Enter news content below to check if it's real or fake.")
+
+user_input = st.text_area("News Content", "")
+
+if st.button("Predict"):
+    if user_input.strip() == "":
+        st.warning("Please enter some text.")
+    else:
+        # Transform and predict
+        transformed_text = vectorizer.transform([user_input])
+        prediction = model.predict(transformed_text)[0]
+        
+        if prediction == 1:
+            st.success("✅ This news is **REAL**.")
+        else:
+            st.error("🚨 This news is **FAKE**.")
+>>>>>>> beecc0f (Updated Streamlit app with joblib model loading)
