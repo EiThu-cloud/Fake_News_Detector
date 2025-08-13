@@ -1,83 +1,46 @@
 import streamlit as st
-import requests
+import pickle
 
-# Set page config
-st.set_page_config(
-    page_title="Fake News Detector",
-    page_icon="📰",
-    layout="centered",
-)
+# =========================
+# Load model and vectorizer
+# =========================
+@st.cache_resource
+def load_model_and_vectorizer():
+    with open("fake_news_model.pkl", "rb") as f:
+        model = pickle.load(f)
+    with open("tfidf_vectorizer.pkl", "rb") as f:
+        vectorizer = pickle.load(f)
+    return model, vectorizer
 
-from flask import Flask, request, jsonify
-import joblib
+model, vectorizer = load_model_and_vectorizer()
 
-app = Flask(__name__)
-
-# Load your trained model and vectorizer files
-model = joblib.load("fake_news_model.pkl")
-vectorizer = joblib.load("tfidf_vectorizer.pkl")
-
-@app.route("/predict", methods=["POST"])
-def predict():
-    data = request.get_json()
-
-    if not data or "text" not in data:
-        return jsonify({"error": "No text provided"}), 400
-
-    text = data["text"].strip()
-    if not text:
-        return jsonify({"error": "Empty text"}), 400
-
-    # Vectorize input text
-    X = vectorizer.transform([text])
-
-    # Predict: assuming model outputs 0 for Fake, 1 for True
-    pred = model.predict(X)[0]
-
-    # Convert numeric prediction to label
-    label = "Fake" if pred == 0 else "True"
-
-    return jsonify({"prediction": label})
-
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
-
-
-
-# App Title
+# =========================
+# Streamlit UI
+# =========================
+st.set_page_config(page_title="Fake News Detector", page_icon="📰", layout="centered")
 st.title("📰 Fake News Detector")
-st.markdown("Check whether a news article is **Fake** or **True** in seconds.")
+st.write("Enter a news article or statement below and we'll predict whether it's **Real** or **Fake**.")
 
-# User input
-news_text = st.text_area("✏️ Enter the news text here:")
+# Text input
+news_text = st.text_area("📝 Paste your news text here:", height=200)
 
-# Check button
+# Prediction button
 if st.button("🔍 Check News"):
-    if not news_text.strip():
-        st.warning("⚠️ Please enter some text to check.")
+    if news_text.strip():
+        # Vectorize input
+        text_vectorized = vectorizer.transform([news_text])
+
+        # Predict
+        prediction = model.predict(text_vectorized)[0]
+
+        # Display result
+        if prediction == 1:
+            st.error("🚨 This news might be **Fake**.")
+        else:
+            st.success("✅ This news seems **Real**.")
     else:
-        try:
-            # Send request to backend API
-            response = requests.post(
-                "https://your-app.up.railway.app/predict", 
-                json={"text": news_text}
-        )
-
-
-            if response.status_code == 200:
-                result = response.json().get("prediction", "Unknown")
-                if result.lower() == "fake":
-                    st.error("🚨 This news appears to be **FAKE**.")
-                elif result.lower() == "true":
-                    st.success("✅ This news appears to be **TRUE**.")
-                else:
-                    st.info(f"ℹ️ Prediction: {result}")
-            else:
-                st.error("❌ API error. Please check the backend server.")
-
-        except Exception as e:
-            st.error(f"⚠️ Could not connect to backend: {e}")
+        st.warning("⚠️ Please enter some text before checking.")
 
 # Footer
 st.markdown("---")
-st.markdown("Made with ❤️ using Streamlit")
+st.caption("Built with ❤️ using Streamlit and scikit-learn")
