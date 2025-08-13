@@ -1,33 +1,47 @@
+# app.py
+# =========================
+# Fake News Detector using Streamlit
+# =========================
+
 import streamlit as st
-<<<<<<< HEAD
-import pickle
-
-# =========================
-# Load model and vectorizer
-# =========================
-@st.cache_resource
-def load_model_and_vectorizer():
-    with open("fake_news_model.pkl", "rb") as f:
-        model = pickle.load(f)
-    with open("tfidf_vectorizer.pkl", "rb") as f:
-        vectorizer = pickle.load(f)
-=======
 import joblib
+import re
 
+# -------------------------
+# Page configuration (must be first Streamlit command)
+# -------------------------
+st.set_page_config(
+    page_title="Fake News Detector",
+    page_icon="📰",
+    layout="centered"
+)
+
+# -------------------------
+# Load model and vectorizer
+# -------------------------
 @st.cache_resource
 def load_model_and_vectorizer():
-    model = joblib.load("model.pkl")
-    vectorizer = joblib.load("vectorizer.pkl")
->>>>>>> beecc0f (Updated Streamlit app with joblib model loading)
+    model = joblib.load("fake_news_model.pkl")
+    vectorizer = joblib.load("tfidf_vectorizer.pkl")
     return model, vectorizer
 
 model, vectorizer = load_model_and_vectorizer()
 
-<<<<<<< HEAD
-# =========================
+# -------------------------
+# Utility function to check if text is meaningful
+# -------------------------
+def is_meaningful(text):
+    """
+    Returns True if the text contains enough real words.
+    """
+    words = text.split()
+    # Count words that are at least 2 letters long (letters only)
+    real_words = [w for w in words if re.match("^[a-zA-Z]{2,}$", w)]
+    return len(real_words) >= max(3, len(words)//2)  # at least half the words or 3
+
+# -------------------------
 # Streamlit UI
-# =========================
-st.set_page_config(page_title="Fake News Detector", page_icon="📰", layout="centered")
+# -------------------------
 st.title("📰 Fake News Detector")
 st.write("Enter a news article or statement below and we'll predict whether it's **Real** or **Fake**.")
 
@@ -37,39 +51,25 @@ news_text = st.text_area("📝 Paste your news text here:", height=200)
 # Prediction button
 if st.button("🔍 Check News"):
     if news_text.strip():
-        # Vectorize input
-        text_vectorized = vectorizer.transform([news_text])
-
-        # Predict
-        prediction = model.predict(text_vectorized)[0]
-
-        # Display result
-        if prediction == 1:
-            st.error("🚨 This news might be **Fake**.")
+        # Minimum length check
+        if len(news_text.strip()) < 20:
+            st.warning("⚠️ Please enter a longer news article for a reliable prediction.")
+        # Gibberish/meaningless text check
+        elif not is_meaningful(news_text):
+            st.error("🚨 Fake News (text seems meaningless)")
         else:
-            st.success("✅ This news seems **Real**.")
+            # Vectorize and predict
+            text_vectorized = vectorizer.transform([news_text])
+            prediction = bool(model.predict(text_vectorized)[0])
+
+            # Only two outputs
+            if prediction:
+                st.error("✅ Real News")
+            else:
+                st.success("🚨 Fake News") 
     else:
         st.warning("⚠️ Please enter some text before checking.")
 
 # Footer
 st.markdown("---")
 st.caption("Built with ❤️ using Streamlit and scikit-learn")
-=======
-st.title("📰 Fake News Detector")
-st.write("Enter news content below to check if it's real or fake.")
-
-user_input = st.text_area("News Content", "")
-
-if st.button("Predict"):
-    if user_input.strip() == "":
-        st.warning("Please enter some text.")
-    else:
-        # Transform and predict
-        transformed_text = vectorizer.transform([user_input])
-        prediction = model.predict(transformed_text)[0]
-        
-        if prediction == 1:
-            st.success("✅ This news is **REAL**.")
-        else:
-            st.error("🚨 This news is **FAKE**.")
->>>>>>> beecc0f (Updated Streamlit app with joblib model loading)
