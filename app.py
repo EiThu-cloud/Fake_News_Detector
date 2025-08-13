@@ -23,9 +23,9 @@ if st.button("🔍 Check News"):
         try:
             # Send request to backend API
             response = requests.post(
-                "https://your-backend-url.com/predict",  # <-- Your actual backend URL here
+                "https://your-app.up.railway.app/predict", 
                 json={"text": news_text}
-            )
+        )
 
 
             if response.status_code == 200:
